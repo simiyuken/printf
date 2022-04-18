@@ -1,111 +1,45 @@
-#include "main.h"
+#include "holberton.h"
 /**
- *_printf - printf
- *@format: const char pointer
- *Description: this functions implement some functions of printf
- *Return: num of characteres printed
+ * _printf - is a function that selects the correct function to print.
+ * @format: identifier to look for.
+ * Return: the length of the string.
  */
-int _printf(const char *format, ...)
+int _printf(const char * const format, ...)
 {
-	const char *string;
-	int cont = 0;
-	va_list arg;
+	convert_match m[] = {
+		{"%s", printf_string}, {"%c", printf_char},
+		{"%%", printf_37},
+		{"%i", printf_int}, {"%d", printf_dec}, {"%r", printf_srev},
+		{"%R", printf_rot13}, {"%b", printf_bin}, {"%u", printf_unsigned},
+		{"%o", printf_oct}, {"%x", printf_hex}, {"%X", printf_HEX},
+		{"%S", printf_exclusive_string}, {"%p", printf_pointer}
+	};
 
-	if (!format)
+	va_list args;
+	int i = 0, j, len = 0;
+
+	va_start(args, format);
+	if (format == NULL || (format[0] == '%' && format[1] == '\0'))
 		return (-1);
 
-	va_start(arg, format);
-	string = format;
-
-	cont = loop_format(arg, string);
-
-	va_end(arg);
-	return (cont);
-}
-/**
- *loop_format - loop format
- *@arg: va_list arg
- *@string: pointer from format
- *Description: This function make loop tp string pointer
- *Return: num of characteres printed
- */
-int loop_format(va_list arg, const char *string)
-{
-	int i = 0, flag = 0, cont_fm = 0, cont = 0, check_per = 0;
-
-	while (i < _strlen((char *)string) && *string != '\0')
+Here:
+	while (format[i] != '\0')
 	{
-		char aux = string[i];
-
-		if (aux == '%')
+		j = 13;
+		while (j >= 0)
 		{
-			i++, flag++;
-			aux = string[i];
-			if (aux == '\0' && _strlen((char *)string) == 1)
-				return (-1);
-			if (aux == '\0')
-				return (cont);
-			if (aux == '%')
+			if (m[j].id[0] == format[i] && m[j].id[1] == format[i + 1])
 			{
-				flag++;
-			} else
-			{
-				cont_fm = function_manager(aux, arg);
-				if (cont_fm >= 0 && cont_fm != -1)
-				{
-					i++;
-					aux = string[i];
-					if (aux == '%')
-						flag--;
-					cont = cont + cont_fm;
-				} else if (cont_fm == -1 && aux != '\n')
-				{
-					cont += _putchar('%');
-				}
+				len += m[j].f(args);
+				i = i + 2;
+				goto Here;
 			}
+			j--;
 		}
-		check_per = check_percent(&flag, aux);
-		cont += check_per;
-		if (check_per == 0 && aux != '\0' && aux != '%')
-			cont += _putchar(aux), i++;
-		check_per = 0;
+		_putchar(format[i]);
+		len++;
+		i++;
 	}
-	return (cont);
-}
-/**
- * check_percent - call function manager
- *@flag: value by reference
- *@aux: character
- *Description: This function print % pear
- *Return: 1 if % is printed
- */
-int check_percent(int *flag, char aux)
-{
-	int tmp_flag;
-	int cont = 0;
-
-	tmp_flag = *flag;
-	if (tmp_flag == 2 && aux == '%')
-	{
-		_putchar('%');
-		tmp_flag = 0;
-		cont = 1;
-	}
-	return (cont);
-}
-
-/**
- * call_function_manager - call function manager
- *@aux: character parameter
- *@arg: va_list arg
- *Description: This function call function manager
- *Return: num of characteres printed
- */
-
-int call_function_manager(char aux, va_list arg)
-{
-	int cont = 0;
-
-	cont = function_manager(aux, arg);
-	return (cont);
+	va_end(args);
+	return (len);
 }
